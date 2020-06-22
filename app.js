@@ -10,7 +10,121 @@ const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
+const validateEmail = mail => {
 
+ if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(myForm.emailAddr.value)){
+
+    return (true)
+
+  }
+
+    return (false)
+    
+}
+
+const output = []
+const questions = [
+    {
+        type:"list",
+        name: "type",
+        message:"What kind of user are you adding?",
+        choices: ["Intern", "Engineer", "Manager"]
+    },
+    {
+        type:"input",
+        name:"name",
+        message:"What is the name of the employee?"
+    },
+    {
+        type:"input",
+        name:"id",
+        message:"What is this employee's ID?"
+    },
+    {
+        type:"input",
+        name:"email",
+        message:"What is this employee's email address"
+    },
+    {
+        type:"input",
+        name:"school",
+        message:"What school is this intern from?",
+        when: answers => {
+            return answers.type === "Intern"
+        }
+    },
+    {
+        type:"input",
+        name:"github",
+        message:"What is this engineer's GitHub username?",
+        when: answers => {
+            return answers.type === "Engineer"
+        }
+    },
+    {
+        type:"input",
+        name:"office",
+        message:"What is this manager's office number?",
+        when: answers => {
+            return answers.type === "Manager"
+        }
+    },
+    {
+        type:"list",
+        name:"finish",
+        message:"Would you like to enter another employee?",
+        choices:["True", "False"]
+    }
+]
+
+const employeeEnter = () => {inquirer.prompt(questions)
+    .then(response => {
+        
+        output.push(response)
+
+        if (response.finish === "True"){
+            
+            employeeEnter()
+
+        }
+
+        else{
+
+            const employees = output.map(employee => {
+
+                switch(employee.type){
+
+                    case "Intern":
+                        return new Intern(employee.name, employee.id, employee.email, employee.school)
+                        
+
+                    case "Engineer":
+                        return new Engineer(employee.name, employee.id, employee.email, employee.github)
+                        
+
+                    case "Manager":
+                        return new Manager(employee.name, employee.id, employee.email, employee.office)
+
+                }
+
+            })
+
+            if (!fs.existsSync(OUTPUT_DIR)){
+
+                fs.mkdirSync(OUTPUT_DIR)
+
+            }
+
+            fs.writeFile(outputPath, render(employees), (err) => {if (err) throw err; console.log("Employee page written!")})
+            
+        }
+
+    })
+    .catch(err => console.log(err))
+
+}
+
+employeeEnter()
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
 
